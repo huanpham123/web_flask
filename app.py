@@ -1,7 +1,6 @@
-from flask import Flask, request, jsonify, session, render_template
+from flask import Flask, request, jsonify, send_from_directory, session, render_template
 from flask_cors import CORS
 from g4f.client import Client
-from g4f.providers import Aichat  # Import provider mà bạn muốn sử dụng
 import os
 
 app = Flask(__name__)
@@ -27,25 +26,18 @@ def chat():
     # Gửi toàn bộ lịch sử cuộc trò chuyện đến GPT-4
     print("Lịch sử cuộc trò chuyện gửi đi:", session['conversation'])  # Log lịch sử cuộc trò chuyện
 
-    try:
-        # Sử dụng provider từ g4f, ví dụ: Aichat
-        response = client.chat.completions.create(
-            model="gpt-4",
-            messages=session['conversation'],
-            provider=Aichat()  # Thay đổi provider ở đây nếu cần
-        )
-        
-        reply = response.choices[0].message.content
-        print("Phản hồi từ GPT-4:", reply)  # Log phản hồi từ GPT-4
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=session['conversation'],
+    )
+    
+    reply = response.choices[0].message.content
+    print("Phản hồi từ GPT-4:", reply)  # Log phản hồi từ GPT-4
 
-        # Thêm phản hồi của chatbot vào lịch sử cuộc trò chuyện
-        session['conversation'].append({"role": "assistant", "content": reply})
+    # Thêm phản hồi của chatbot vào lịch sử cuộc trò chuyện
+    session['conversation'].append({"role": "assistant", "content": reply})
 
-        return jsonify({'reply': reply})
-
-    except Exception as e:
-        print(f"Lỗi xảy ra: {e}")
-        return jsonify({'reply': "Hiện tại hệ thống đang gặp sự cố, vui lòng thử lại sau."})
+    return jsonify({'reply': reply})
 
 if __name__ == '__main__':
     app.run()
